@@ -1,6 +1,7 @@
 ##############################
 #      Install Hadoop        #
 ##############################
+
 1.  Login as root
 
 2.  Download and setup JDK 8
@@ -28,7 +29,7 @@
 
 6.  Create directories
     mkdir -p /app/hadoop
-    chown -R hadoop:hdpadm /app/hadoop
+    chown hadoop:hdpadm /app/hadoop
     mkdir -p /data/hadoop/namenode
     mkdir -p /data/hadoop/datanode
     chown -R hadoop:hdpadm /data/hadoop
@@ -38,14 +39,20 @@
     firewall-cmd --zone=public --permanent --add-port=9870/tcp
     firewall-cmd --zone=public --permanent --add-port=8088/tcp
     firewall-cmd --reload
-    firewall-cmd --list-all
-
-7.  Repeat step 1-6 in datanode01
+    firewall-cmd --list-ports
 
 8.  Switch user to hadoop
     su - hadoop
 
-6.  Generate SSH keys
+9.  Download and setup Hadoop
+    cd /app/hadoop
+    wget http://mirror.apache-kr.org/hadoop/common/stable/hadoop-3.2.1.tar.gz
+    tar -xz --no-same-owner -f hadoop-3.2.1.tar.gz
+    ln -s /app/hadoop/hadoop-3.2.1 default
+
+10. Repeat step 1-9 in datanode01
+
+11. Generate SSH keys
     mkdir ~/.ssh
     cd .ssh
     ssh-keygen -t rsa -b 4096 -C "hadoop@namenode01" -f "hadoop@namenode01" -N ''
@@ -59,26 +66,20 @@
     chmod 700 .
     chmod 600 *
 
-5.  Download and setup Hadoop
-    cd /app/hadoop
-    wget http://mirror.apache-kr.org/hadoop/common/stable/hadoop-3.2.1.tar.gz
-    tar -xz --no-same-owner -f hadoop-3.2.1.tar.gz
-    ln -s /app/hadoop/hadoop-3.2.1 default
-
-9.  Set environment variables
+12.  Set environment variables
     echo '' >> ~/.bashrc
     echo 'export HADOOP_HOME=/app/hadoop/default' >> ~/.bashrc
     echo 'export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib"' >> ~/.bashrc
     echo 'export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH' >> ~/.bashrc
 
-10. Set configuration
+13. Set configuration
     vi /app/hadoop/etc/hadoop/core-site.xml
     vi /app/hadoop/etc/hadoop/hdfs-site.xml
     vi /app/hadoop/etc/hadoop/mapred-site.xml
     vi /app/hadoop/etc/hadoop/yarn-site.xml
     vi /app/hadoop/etc/hadoop/workers
 
-11. Copy to datanodes
+14. Copy to datanodes
     scp -r ~/.ssh hadoop@datanode01:/home/hadoop
     scp ~/.bashrc hadoop@datanode01:/home/hadoop
     scp /app/hadoop/default/etc/hadoop/core-site.xml hadoop@datanode01:/app/hadoop/default/etc/hadoop
@@ -87,24 +88,34 @@
     scp /app/hadoop/default/etc/hadoop/yarn-site.xml hadoop@datanode01:/app/hadoop/default/etc/hadoop
     scp /app/hadoop/default/etc/hadoop/workers hadoop@datanode01:/app/hadoop/default/etc/hadoop
 
-12. source ~/.bashrc
+15. source ~/.bashrc
 
-13. Format HDFS
+16. Format HDFS
     hdfs namenode -format
 
-14. Start HDFS
+17. Start HDFS
     start-dfs.sh
 
-15. Get HDFS report
+18. Create basic path in HDFS
+    su - hadoop
+    hdfs dfs -mkdir -p /env/dev
+    hdfs dfs -chgrp -R hdpadm /env
+    hdfs dfs -chmod -R 750 /env
+    hdfs dfs -mkdir /tmp
+    hdfs dfs -chgrp hdpadm /tmp
+    hdfs dfs -chmod 1777 /tmp
+    exit
+
+19. Get HDFS report
     hdfs dfsadmin -report
 
-16. Go to http://namenode01:9870 for resource console
+20. Go to http://namenode01:9870 for resource console
 
-17. Start YARN
+21. Start YARN
     start-yarn.sh
 
-18. Get YARN Nodes and Applications
+22. Get YARN Nodes and Applications
     yarn node -list
     yarn application -list
 
-19. Go to http://namenode01:8088 for yarn console
+23. Go to http://namenode01:8088 for yarn console
