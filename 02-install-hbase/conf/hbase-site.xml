@@ -1,11 +1,18 @@
 <configuration>
   <property>
     <name>hbase.rootdir</name>
-    <value>/data/hbase</value>
+    <value>hdfs://namenode01:9000/env/dev/hbase</value>
   </property>
-
   <property>
     <name>hbase.zookeeper.property.dataDir</name>
     <value>/data/hbase/zookeeper</value>
+  </property>
+  <property>
+    <name>hbase.cluster.distributed</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>hbase.unsafe.stream.capability.enforce</name>
+    <value>false</value>
   </property>
 </configuration>

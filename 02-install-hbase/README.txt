@@ -1,23 +1,95 @@
 ##############################
-#       Install Hive         #
+#       Install HBase        #
 ##############################
+
+Prerequisites: hadoop
+
 1.  Login as root
+
 2.  Create user hbase with group hdpadm
-3.  Download hbase binary from the following URL to /app
-    https://downloads.apache.org/hbase/stable/
-4.  Unpack and rename /app/hbase-x.x.x to /app/hbase
-5.  Change owner and group of /app/hbase to hbase and hdpadm
-6.  Create folder /data/hbase and set owner and group to hbase and hdpadm
-7.  Create folder /data/hbase/zookeeper and set owner and group to hbase and hdpadm
-8.  Switch user to hbase
-9.  Edit /home/hbase/.bashrc
-    export HADOOP_HOME=/app/hadoop
-    export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib"
-    export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
-    export HBASE_HOME=/app/hbase
-    export PATH=$HBASE_HOME/bin:$PATH
-10. Edit /app/hbase/conf/hbase-site.xml
-11. source /home/hbase/.bashrc
-12. start-hbase.sh
+    useradd -m -s /bin/bash hbase
+    usermod -g hdpadm hbase
+    passwd hbase
+    
+3.  Create directories
+    mkdir -p /app/hbase
+    chown -R hbase:hdpadm /app/hbase
+    mkdir -p /data/hbase/zookeeper
+    chown -R hbase:hdpadm /data/hbase
+
+7.  Add firewall exception
+    firewall-cmd --zone=public --permanent --add-port=16010/tcp
+    firewall-cmd --zone=public --permanent --add-port=16011/tcp
+    firewall-cmd --zone=public --permanent --add-port=16030/tcp
+    firewall-cmd --zone=public --permanent --add-port=16031/tcp
+    firewall-cmd --reload
+    firewall-cmd --list-all
+    
+4.  Create HBase path in HDFS
+    su - hadoop
+    hdfs dfs -mkdir -p /env/dev/hbase
+    hdfs dfs -chown hbase /env/dev/hbase
+    hdfs dfs -chgrp hdpadm /env/dev/hbase
+    exit
+
+4.  Switch user to hbase
+    su - hbase
+    
+5.  Generate SSH keys
+    mkdir ~/.ssh
+    cd .ssh
+    ssh-keygen -t rsa -b 4096 -C "hbase@namenode01" -f "hbase@namenode01" -N ''
+    cat hbase@namenode01.pub >> authorized_keys
+    echo '' >> ~/.ssh/config
+    echo 'Host localhost' >> ~/.ssh/config
+    echo '  IdentityFile ~/.ssh/hbase@namenode01' >> ~/.ssh/config
+    echo '' >> ~/.ssh/config
+    echo 'Host namenode01' >> ~/.ssh/config
+    echo '  IdentityFile ~/.ssh/hbase@namenode01' >> ~/.ssh/config
+    echo '' >> ~/.ssh/config
+    echo 'Host datanode01' >> ~/.ssh/config
+    echo '  IdentityFile ~/.ssh/hbase@namenode01' >> ~/.ssh/config
+    chmod 700 .
+    chmod 600 *
+    
+5.  Download hbase binary from the following URL to /app
+    cd /app/hbase
+    wget http://mirror.apache-kr.org/hbase/stable/hbase-2.2.3-bin.tar.gz
+    tar -xz --no-same-owner -f hbase-2.2.3-bin.tar.gz
+    ln -s /app/hbase/hbase-2.2.3 default
+    
+6.  Set environment variablesecho '' >> ~/.bashrc
+    echo 'export HADOOP_HOME=/app/hadoop/default' >> ~/.bashrc
+    echo 'export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib"' >> ~/.bashrc
+    echo 'export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH' >> ~/.bashrc
+    echo '' >> ~/.bashrc
+    echo 'export HBASE_HOME=/app/hbase/default' >> ~/.bashrc
+    echo 'export PATH=$HBASE_HOME/bin:$PATH' >> ~/.bashrc
+    
+10. Set configuration
+    vi /app/hbase/default/conf/hbase-site.xml
+    vi /app/hbase/default/conf/regionservers
+    
+11. Copy to namenodes
+    scp -r ~/.ssh hbase@datanode01:/home/hbase
+    scp ~/.bashrc hbase@datanode01:/home/hbase
+    scp /app/hbase/default/conf/hbase-site.xml hbase@datanode01:/app/hbase/default/conf/
+    scp /app/hbase/default/conf/regionservers hbase@datanode01:/app/hbase/default/conf/
+
+11. source ~/.bashrc
+
+12. Run
+    start-hbase.sh
+
 13. Test CLI
     "hbase shell"
+    
+14. Start backup master
+    local-master-backup.sh start 1
+    
+15. Start local regionserver
+    local-regionservers.sh start 1
+    
+14. Go to http://namenode01:16010 for hbase master console
+
+15. Go to http://namenode01:16030 for hbase regionserver console
