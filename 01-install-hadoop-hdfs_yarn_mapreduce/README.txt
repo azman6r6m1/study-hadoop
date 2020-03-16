@@ -28,10 +28,10 @@
     export HADOOP_HOME=/app/hadoop
     export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib"
     export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
-19. Edit /app/hadoop/etc/hadoop/core-site.xml. Refer core-site.xml.
-20. Edit /app/hadoop/etc/hadoop/hdfs-site.xml. Refer hdfs-site.xml.
-21. Edit /app/hadoop/etc/hadoop/mapred-site.xml. Refer mapred-site.xml.
-22. Edit /app/hadoop/etc/hadoop/yarn-site.xml. Refer yarn-site.xml.
+19. Edit /app/hadoop/etc/hadoop/core-site.xml
+20. Edit /app/hadoop/etc/hadoop/hdfs-site.xml
+21. Edit /app/hadoop/etc/hadoop/mapred-site.xml
+22. Edit /app/hadoop/etc/hadoop/yarn-site.xml
 23. Edit /app/hadoop/etc/hadoop/workers
     namenode01
     datanode01
@@ -44,4 +44,7 @@
     /app/hadoop/etc/hadoop/yarn-site.xml
     /app/hadoop/etc/hadoop/workers
 25. source /home/hadoop/.bashrc
-26. start-all.sh
+26. Format HDFS
+    hdfs namenode -format
+27. Run start-dfs.sh. Go to http://namenode01:9870 for resource console
+28. Run start-yarn.sh. Go to http://namenode01:8088 for yarn console
